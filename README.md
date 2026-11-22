@@ -10,11 +10,11 @@ and audit-ready history/reporting through **incremental migrations only**.
 ## Quick start (XAMPP)
 
 1. Start **Apache** and **MySQL** in XAMPP.
-2. Keep the existing Lab 5 database `jimtrack_inventory`.
-   If it does not exist yet, create it:
+2. Lab 6 uses its own database, `lab6_2411600148`. The Lab 5 database
+   `jimtrack_inventory` is left untouched as a backup. Create the Lab 6 database if needed:
 
    ```sql
-   CREATE DATABASE IF NOT EXISTS jimtrack_inventory CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE IF NOT EXISTS lab6_2411600148 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 
 3. `.env` is configured for:
@@ -24,21 +24,21 @@ and audit-ready history/reporting through **incremental migrations only**.
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_DATABASE=jimtrack_inventory
+   DB_DATABASE=lab6_2411600148
    DB_USERNAME=root
    DB_PASSWORD=
    QUEUE_CONNECTION=database
    ```
 
-4. Install and run the **incremental** Lab 6 migrations (do **not** use `migrate:fresh`
-   if you want to keep Lab 5 data):
+4. Install, migrate and seed the new Lab 6 database:
 
    ```bash
    composer install
    npm install && npm run build
    cp .env.example .env      # only if .env is missing
    php artisan key:generate
-   php artisan migrate       # adds Lab 6 columns/tables only
+   php artisan migrate
+   php artisan db:seed       # admin, staff, brands, categories, products, sample history
    php artisan serve
    ```
 
@@ -200,7 +200,7 @@ receipt generation and profile editing.
 ## dbGate (browse the MySQL database)
 
 See `DBGATE.md` for the exact connection settings (`127.0.0.1:3306`, database
-`jimtrack_inventory`, user `root`, blank password), table overview, verification queries
+`lab6_2411600148`, user `root`, blank password), table overview, verification queries
 and optional SQL backup/import steps. dbGate connects to the live XAMPP MySQL instance, so
 no data migration is needed.
 

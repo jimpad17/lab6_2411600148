@@ -17,7 +17,7 @@ This project uses the existing XAMPP MySQL database. dbGate can connect to the
 | Connection type | **MySQL** |
 | Host | `127.0.0.1` |
 | Port | `3306` |
-| Database | `jimtrack_inventory` |
+| Database | `lab6_2411600148` |
 | User | `root` |
 | Password | _(blank — leave empty)_ |
 | SSL | Disabled / none |
@@ -28,7 +28,7 @@ These match `.env`:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=jimtrack_inventory
+DB_DATABASE=lab6_2411600148
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -42,9 +42,9 @@ DB_PASSWORD=
 2. Click **New connection** (the `+` button) → choose **MySQL**.
 3. Fill in the fields from the table above.
 4. Leave **Database** blank on the connection form if you want to browse every
-   schema, or enter `jimtrack_inventory` to open it directly.
+   schema, or enter `lab6_2411600148` to open it directly.
 5. Click **Save**, then double-click the connection to connect.
-6. Expand `jimtrack_inventory` → **Tables** to browse the data.
+6. Expand `lab6_2411600148` → **Tables** to browse the data.
 
 ## 4. Tables you will see
 
@@ -81,9 +81,9 @@ FROM activity_logs WHERE module = 'Inventory' ORDER BY id DESC LIMIT 10;
 
 ## 6. Optional: export a backup from dbGate
 
-1. Right-click the `jimtrack_inventory` node → **Export** → **SQL**.
+1. Right-click the `lab6_2411600148` node → **Export** → **SQL**.
 2. Choose **Structure + Data**, then save the file (for example
-   `jimtrack_inventory_backup.sql`).
+   `lab6_2411600148_backup.sql`).
 3. To restore later, right-click the connection → **Import** → choose that file.
 
 ## Troubleshooting
@@ -94,7 +94,7 @@ FROM activity_logs WHERE module = 'Inventory' ORDER BY id DESC LIMIT 10;
 - **Database not listed** — create it first:
 
   ```sql
-  CREATE DATABASE IF NOT EXISTS jimtrack_inventory
+  CREATE DATABASE IF NOT EXISTS lab6_2411600148
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
   ```
 

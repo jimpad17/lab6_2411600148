@@ -41,6 +41,7 @@ incremental, guarded migrations.
 - **Option A for overselling: throw and roll back.** A stock-out that would make the balance negative throws `InsufficientStockException`. Because it is thrown inside `DB::transaction()`, both the transaction row and the product update are rolled back. Capping at zero would hide a real data error; allowing negatives would make valuation and reorder alerts meaningless.
 - **Reversal instead of deletion.** `destroy()` creates an equal-and-opposite transaction and flags the original `is_reversed = true`, so the audit trail is never destroyed.
 - **Incremental migrations.** Lab 5 rows and quantities are retained. Each new migration checks for existing columns/indexes before changing the schema.
+- **Separate Lab 6 database.** Lab 6 uses `lab6_2411600148`; the original Lab 5 database `jimtrack_inventory` is left untouched as a backup. The new database is created with all migrations and seeded with users, brands, categories, products and sample stock history.
 
 ### Follow-up enhancements requested after the first demo
 
@@ -81,7 +82,7 @@ incremental, guarded migrations.
   max 2 MB) and change their password after entering the current one. The protected admin
   email is read-only and enforced server-side.
 - **dbGate access.** `DBGATE.md` documents the live MySQL connection
-  (`127.0.0.1:3306`, `jimtrack_inventory`, `root`, blank password), verification queries and
+  (`127.0.0.1:3306`, `lab6_2411600148`, `root`, blank password), verification queries and
   optional SQL backup/import steps.
 
 ---

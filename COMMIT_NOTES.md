@@ -4,8 +4,9 @@ A local repository has been initialized in this folder and the Lab 6 work is com
 
 ```bash
 git status
-git log --oneline -4
-# <new commit>  feat: exact app menu, receipts, profile editing and dbGate guide
+git log --oneline -5
+# <new commit>  chore: use dedicated lab6_2411600148 MySQL database
+# cae4b04      feat: exact app menu, receipts, profile editing and dbGate guide
 # 4a5fe02      chore: change admin password to admin123
 # aeae30b      feat: admin login, order approval, stockout alerts and role-specific reports
 # 509ad71      docs: add GitHub push and PDF submission notes
