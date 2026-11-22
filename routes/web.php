@@ -7,7 +7,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventoryTransactionController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\UserController;
@@ -43,6 +45,14 @@ Route::middleware(['auth', EnsureUserIsActive::class, LogActivity::class])->grou
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read')->whereUuid('notification');
+
+    /* Purchase / sales orders: staff submit, admins review and approve. */
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->whereNumber('order');
+
+    Route::get('profile', [ProfileController::class, 'index'])->name('profile');
 
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
     Route::get('products/export/csv', [ProductController::class, 'exportCsv'])->name('products.export');
@@ -99,6 +109,12 @@ Route::middleware(['auth', EnsureUserIsActive::class, LogActivity::class])->grou
         // Physical-count adjustments are authorized admin actions.
         Route::get('adjustments/create', [StockAdjustmentController::class, 'create'])->name('adjustments.create');
         Route::post('adjustments', [StockAdjustmentController::class, 'store'])->name('adjustments.store');
+
+        // Admin-only order review: edit the quantity, then approve or reject.
+        Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit')->whereNumber('order');
+        Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update')->whereNumber('order');
+        Route::post('orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->whereNumber('order');
+        Route::post('orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->whereNumber('order');
 
         // Reports (reached from the dashboard top-right button, not the sidebar)
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

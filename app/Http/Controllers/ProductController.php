@@ -27,7 +27,10 @@ class ProductController extends Controller
 
         return [
             'name' => ['required', 'string', 'max:150'],
-            'sku' => ['required', 'string', 'max:50', $uniqueSku],
+            'sku' => [
+                'required', 'string', 'max:50',
+                'regex:/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $uniqueSku,
+            ],
             'description' => ['nullable', 'string', 'max:1000'],
             'brand_id' => ['required', 'integer', Rule::exists('brands', 'id')],
             'category_id' => ['required', 'integer', Rule::exists('categories', 'id')],
@@ -42,7 +45,8 @@ class ProductController extends Controller
     {
         return [
             'name.required' => 'Product name is required.',
-            'sku.required' => 'SKU is required.',
+            'sku.required' => 'Product ID / SKU is required.',
+            'sku.regex' => 'Product ID / SKU may contain letters, numbers, dots, hyphens and underscores.',
             'sku.unique' => 'This SKU is already used by another product.',
             'brand_id.required' => 'Please choose a brand.',
             'category_id.required' => 'Please choose a category.',

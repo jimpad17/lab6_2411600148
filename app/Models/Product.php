@@ -26,6 +26,7 @@ class Product extends Model
         'supplier',
         'is_active',
         'low_stock_notified_at',
+        'stockout_notified_at',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class Product extends Model
         'unit_price' => 'decimal:2',
         'is_active' => 'boolean',
         'low_stock_notified_at' => 'datetime',
+        'stockout_notified_at' => 'datetime',
     ];
 
     public function brand(): BelongsTo
@@ -52,6 +54,11 @@ class Product extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(InventoryTransaction::class)->latest();
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
     }
 
     /** Lab 6: the newest stock movement for this product. */
@@ -111,7 +118,7 @@ class Product extends Model
         if (! empty($filters['status'])) {
             match ($filters['status']) {
                 'active' => $query->active(),
-                'inactive' => $query->inactive(),
+                'inactive', 'unavailable' => $query->inactive(),
                 'low' => $query->lowStock(),
                 'out' => $query->outOfStock(),
                 'in' => $query->active()->whereColumn('quantity', '>', 'reorder_level'),
@@ -157,7 +164,8 @@ class Product extends Model
     public function getStockStatusAttribute(): string
     {
         if (! $this->is_active) {
-            return 'Inactive';
+            // Auto-set by the observer when an outbound movement empties stock.
+            return 'Unavailable';
         }
 
         if ($this->isOutOfStock()) {
@@ -188,6 +196,6 @@ class Product extends Model
 
     public static function statusOptions(): array
     {
-        return ['in', 'low', 'out', 'active', 'inactive'];
+        return ['in', 'low', 'out', 'active', 'inactive', 'unavailable'];
     }
 }

@@ -27,17 +27,21 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 @php
+                    $alertTypes = [
+                        \App\Notifications\LowStockNotification::class,
+                        \App\Notifications\StockOutNotification::class,
+                    ];
                     $unreadAlertsCount = Auth::user()->unreadNotifications()
-                        ->where('type', \App\Notifications\LowStockNotification::class)->count();
+                        ->whereIn('type', $alertTypes)->count();
                     $unreadAlerts = Auth::user()->unreadNotifications()
-                        ->where('type', \App\Notifications\LowStockNotification::class)
+                        ->whereIn('type', $alertTypes)
                         ->latest()->limit(5)->get();
                 @endphp
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item dropdown me-3">
                         <a class="nav-link text-white position-relative" href="#" id="alertsDropdown"
                            role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                           title="Low stock notifications">
+                           title="Inventory alerts">
                             <i class="bi bi-bell-fill text-warning" style="font-size: 1.15rem;"></i>
                             @if ($unreadAlertsCount > 0)
                                 <span class="notification-count">{{ $unreadAlertsCount > 9 ? '9+' : $unreadAlertsCount }}</span>
@@ -47,7 +51,7 @@
                             <li>
                                 <h6 class="dropdown-header fw-bold">
                                     <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
-                                    Low Stock Alerts
+                                    Inventory Alerts
                                     <span class="badge badge-low ms-1">{{ $unreadAlertsCount }}</span>
                                 </h6>
                             </li>
@@ -115,6 +119,7 @@
                                 ['dashboard', 'Dashboard', 'bi-speedometer2', 'dashboard'],
                                 ['inventory.index', 'Inventory', 'bi-clipboard-data', 'inventory*'],
                                 ['transactions.index', 'Transactions', 'bi-arrow-left-right', 'transactions*'],
+                                ['orders.index', 'Orders', 'bi-cart3', 'orders*'],
                                 ['products.index', 'Products', 'bi-box-seam', 'products*'],
                                 ['brands.index', 'Brands', 'bi-award', 'brands*'],
                                 ['categories.index', 'Categories', 'bi-tags', 'categories*'],
@@ -155,6 +160,13 @@
                                 </a>
                             </li>
                         @endif
+
+                        <li class="nav-item">
+                            <a class="nav-link rounded px-3 py-2 {{ request()->routeIs('profile') ? 'active' : '' }}"
+                               href="{{ route('profile') }}">
+                                <i class="bi bi-person-circle me-2"></i> Profile
+                            </a>
+                        </li>
                     </ul>
 
                     @unless (Auth::user()->isAdmin())

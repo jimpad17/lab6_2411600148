@@ -16,7 +16,7 @@ class User extends Authenticatable
     /**
      * The seeded Lab 4 account must stay active so ADMIN / ADMIN123 always works.
      */
-    public const PROTECTED_ADMIN_EMAIL = 'admin@jimtrack.local';
+    public const PROTECTED_ADMIN_EMAIL = 'jimpadillo@gmail.com';
 
     /**
      * The attributes that are mass assignable.

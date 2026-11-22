@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\Hash;
 class UserSeeder extends Seeder
 {
     /**
-     * Lab 4 credentials remain usable: ADMIN / ADMIN123.
-     * Breeze logs in with email, so "ADMIN" is mapped in LoginRequest.
+     * Admin now signs in with jimpadillo@gmail.com / JimTrack2026!.
+     * The legacy "ADMIN" alias is still mapped to this account in LoginRequest.
      */
     public function run(): void
     {
         $accounts = [
             [
-                'email' => 'admin@jimtrack.local',
-                'name' => 'ADMIN',
-                'password' => 'ADMIN123',
+                'email' => 'jimpadillo@gmail.com',
+                'name' => 'Jim Padillo',
+                'password' => 'JimTrack2026!',
                 'role' => 'admin',
                 'is_active' => true,
             ],

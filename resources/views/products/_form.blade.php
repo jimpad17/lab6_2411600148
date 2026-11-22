@@ -6,8 +6,10 @@
     </div>
 
     <div class="col-md-5">
-        <label for="sku" class="form-label small fw-bold text-muted">SKU <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="sku" name="sku" value="{{ old('sku', $product->sku) }}" placeholder="JT-EQP-000" required>
+        <label for="sku" class="form-label small fw-bold text-muted">Product ID / SKU <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="sku" name="sku" value="{{ old('sku', $product->sku) }}"
+               placeholder="JT-EQP-000" maxlength="50" required>
+        <small class="text-muted" style="font-size:.7rem;">Letters and numbers are allowed (e.g. JT-001 or ABC123).</small>
         @error('sku') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
     </div>
 

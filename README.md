@@ -50,11 +50,11 @@ and audit-ready history/reporting through **incremental migrations only**.
 
 6. Open <http://127.0.0.1:8000>.
 
-> The three Lab 6 migrations are
-> `2026_11_22_000001_extend_inventory_transactions_for_tracking.php`,
-> `2026_11_22_000002_create_notifications_table.php`, and
-> `2026_11_22_000003_add_low_stock_notified_at_to_products_table.php`.
-> Each uses `Schema::hasColumn()` / `hasIndex()` guards so re-running is safe.
+> The Lab 6 migrations are `000001_extend_inventory_transactions_for_tracking`,
+> `000002_create_notifications_table`, `000003_add_low_stock_notified_at_to_products_table`,
+> `000005_add_stockout_notified_at_to_products_table`, `000006_create_orders_table`, and
+> `000007_update_admin_credentials` (all under `database/migrations/`). Each uses
+> `hasColumn()` / `hasTable()` guards and only adds data, so Lab 5 records are preserved.
 
 ---
 
@@ -62,13 +62,16 @@ and audit-ready history/reporting through **incremental migrations only**.
 
 | Username / Email | Password | Role | Status |
 |------------------|----------|------|--------|
-| `ADMIN` / `admin@jimtrack.local` | `ADMIN123` | Admin | Active |
+| `jimpadillo@gmail.com` | `JimTrack2026!` | Admin | Active |
 | `juan@jimtrack.local` | `STAFF123` | Staff | Active |
 | `maria@jimtrack.local` | `STAFF123` | Staff | Active |
 | `test@jimtrack.local` | `STAFF123` | Staff | Inactive (login blocked) |
 
-`ADMIN` is mapped to `admin@jimtrack.local` in `app/Http/Requests/Auth/LoginRequest.php`,
-so the Lab 4/5 credentials still work. The seeded admin cannot be deactivated or deleted.
+The admin login is shown at the bottom of the login form. Typing `ADMIN` is still mapped to
+the protected admin account in `app/Http/Requests/Auth/LoginRequest.php`, but the password is
+now `JimTrack2026!` (migration `2026_11_22_000007_update_admin_credentials.php` updated the
+existing Lab 5 row in place — no data was deleted). The seeded admin cannot be deactivated
+or deleted.
 
 ---
 
@@ -77,8 +80,13 @@ so the Lab 4/5 credentials still work. The seeded admin cannot be deactivated or
 | Area | Admin | Staff |
 |------|:-----:|:-----:|
 | Dashboard, live KPIs, charts | ✅ | ✅ |
-| Inventory overview + Stock In / Stock Out | ✅ | ✅ |
+| Dashboard: sales/purchase report, daily history, product history | ✅ | ❌ |
+| Dashboard: product report + own orders / profile | ❌ | ✅ |
+| Inventory overview + Stock In / Stock Out (products, brands, categories) | ✅ | ✅ |
 | Transaction log, create, details | ✅ | ✅ |
+| Orders: submit purchase/sales orders | ✅ | ✅ |
+| Orders: correct quantity, approve/reject (stock only moves on approval) | ✅ | ❌ |
+| Profile page | ✅ | ✅ |
 | Products / Brands / Categories — view, search, CSV export | ✅ | ✅ |
 | Add / edit / deactivate / restore master data | ✅ | ❌ |
 | Physical-count stock adjustments | ✅ | ❌ |
@@ -107,6 +115,12 @@ direct access) and their links are hidden in the Blade views.
 | **Audit-friendly reversal** — deleting a transaction creates an opposite movement and marks the original `is_reversed`; history is never erased | `InventoryTransactionController@destroy` |
 | **Product history + reports** — running balance, date filters, stock movement/low stock/valuation report with CSV export | `resources/views/products/show.blade.php`, `resources/views/reports/tracking.blade.php`, `ReportController@tracking` |
 | **Tests** — observer, rollback, validation, alerts, API, roles, pages | `tests/Feature/InventoryTrackingTest.php` |
+| **Order approval workflow** — staff submit Pending, admin edits the quantity (original kept in `original_quantity`) then approves; the observer posts stock only on approval | `app/Models/Order.php`, `app/Http/Controllers/OrderController.php`, `resources/views/orders/*` |
+| **Order date rule** — `ValidOrderDate` rejects yesterday/past dates; today and future dates are accepted | `app/Rules/ValidOrderDate.php` |
+| **Stockout automation** — an outbound movement to zero sets `is_active = false` ("Unavailable"), sends a bell + email `StockOutNotification` to admins, and writes an audit entry; restocking restores availability | `app/Observers/InventoryTransactionObserver.php`, `app/Notifications/StockOutNotification.php`, `products.stockout_notified_at` |
+| **Role-specific dashboard reports** — admin sees sales/purchase, product, daily-history and product-history panels; staff sees product report and own orders | `DashboardController@index`, `resources/views/dashboard.blade.php` |
+| **Alphanumeric Product ID / SKU** — letters and numbers (plus `.`, `-`, `_`) are accepted and validated | `ProductController@rules`, `resources/views/products/_form.blade.php` |
+| **New tests for the above** — 10 extra feature tests | `tests/Feature/OrderApprovalTest.php` |
 
 ### Backward compatibility with Lab 5
 
@@ -135,8 +149,10 @@ Responses use `InventoryStatResource`, `ProductStockResource` and
 ## Main routes
 
 - `/dashboard` — live statistics, charts, low-stock list and recent movements
-- `/inventory` — stock levels and quick Stock In / Stock Out
+- `/inventory` — stock levels and quick Stock In / Stock Out (filter by brand, category and status including Unavailable)
 - `/inventory-transactions` — filterable transaction log (create/show/reverse)
+- `/orders` — purchase/sales order queue; `/orders/create` — submit an order; admin can edit/approve/reject
+- `/profile` — account details and recent orders
 - `/adjustments/create` — admin physical-count adjustment
 - `/notifications` — low-stock alert inbox
 - `/products` — product management with per-product transaction history
@@ -160,9 +176,10 @@ the audit trail is always kept.
 php artisan test
 ```
 
-**43 tests pass**, covering Breeze auth, Lab 5 stock/CRUD/roles/activity logging, and the
-new Lab 6 observer, rollback, oversell rejection, notifications, API, adjustments,
-reversal, access control and page rendering.
+**53 tests pass**, covering Breeze auth, Lab 5 stock/CRUD/roles/activity logging, the Lab 6
+observer, rollback, oversell rejection, notifications, API, adjustments, reversal, access
+control and page rendering, plus the new admin credentials, order approval workflow, date
+rule, stockout alert, alphanumeric SKU and role-specific dashboard reports.
 
 ---
 

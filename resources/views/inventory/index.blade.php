@@ -70,6 +70,7 @@
                         <option value="in" {{ ($filters['status'] ?? '') === 'in' ? 'selected' : '' }}>In Stock</option>
                         <option value="low" {{ ($filters['status'] ?? '') === 'low' ? 'selected' : '' }}>Low Stock</option>
                         <option value="out" {{ ($filters['status'] ?? '') === 'out' ? 'selected' : '' }}>Out of Stock</option>
+                        <option value="unavailable" {{ ($filters['status'] ?? '') === 'unavailable' ? 'selected' : '' }}>Unavailable</option>
                     </select>
                 </div>
                 <div class="col-md-4">

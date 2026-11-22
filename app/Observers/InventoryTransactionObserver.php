@@ -7,6 +7,8 @@ use App\Models\InventoryTransaction;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\LowStockNotification;
+use App\Notifications\StockOutNotification;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
@@ -63,13 +65,57 @@ class InventoryTransactionObserver
                 );
             }
 
+            // Lab 6 extension: an outbound movement that empties the shelf
+            // automatically makes the product unavailable. A later stock-in
+            // restores it only when the deactivation came from a stockout.
+            $updates = ['quantity' => $newQuantity];
+            $isStockout = false;
+
+            if ($delta < 0 && $newQuantity === 0) {
+                $updates['is_active'] = false;
+                $updates['stockout_notified_at'] = now();
+                $isStockout = true;
+            } elseif ($delta > 0 && $newQuantity > 0 && $product->stockout_notified_at !== null) {
+                $updates['is_active'] = true;
+                $updates['stockout_notified_at'] = null;
+            }
+
             // updateQuietly prevents recursive model events while still
             // keeping the stock figures atomic with the transaction row.
-            $product->updateQuietly(['quantity' => $newQuantity]);
+            $product->updateQuietly($updates);
             $transaction->updateQuietly(['balance_after' => $newQuantity]);
 
-            $this->handleLowStockAlert($product->fresh(), $newQuantity > $product->reorder_level);
+            $fresh = $product->fresh();
+
+            if ($isStockout) {
+                $this->handleStockOut($fresh, $transaction);
+            } else {
+                $this->handleLowStockAlert($fresh, $newQuantity > $fresh->reorder_level);
+            }
         });
+    }
+
+    /** Alert admins in the bell and write an audit entry when stock hits zero. */
+    private function handleStockOut(Product $product, InventoryTransaction $transaction): void
+    {
+        ActivityLogger::log(
+            'updated',
+            'Inventory',
+            "Product '{$product->name}' ({$product->sku}) ran out of stock and was automatically set to unavailable.",
+            $transaction->user
+        );
+
+        $recipients = User::active()->where('role', 'admin')->get();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        try {
+            Notification::send($recipients, new StockOutNotification($product));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**

@@ -211,6 +211,237 @@
             </div>
         </div>
     </div>
+
+    {{-- ================================================================
+         Role-specific reports (new in this iteration)
+         Admin: sales & purchase, product report, daily history, product history
+         Staff: product report + their own orders / profile shortcut
+         ================================================================ --}}
+    @if ($isAdmin)
+        @if ($pendingOrders > 0)
+            <div class="alert alert-warning d-flex align-items-center justify-content-between py-2 mb-4">
+                <div class="small">
+                    <i class="bi bi-shield-check me-1"></i>
+                    <strong>{{ $pendingOrders }}</strong> order{{ $pendingOrders === 1 ? '' : 's' }} waiting for your review.
+                    Correct any mistake before it is posted to inventory.
+                </div>
+                <a href="{{ route('orders.index', ['status' => 'pending']) }}" class="btn btn-sm btn-warning fw-bold">
+                    Review now <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        @endif
+
+        <!-- Sales & Purchase Report -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-cart-check text-success me-2"></i>Sales Report</h5>
+                        <a href="{{ route('orders.index', ['type' => 'sales']) }}" class="small text-decoration-none fw-semibold">View all</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light"><tr><th class="ps-3">Order #</th><th>Product</th><th>Qty</th><th>Value</th><th>Date</th></tr></thead>
+                                <tbody>
+                                    @forelse ($salesOrders as $order)
+                                        <tr>
+                                            <td class="ps-3"><a href="{{ route('orders.show', $order) }}" class="text-decoration-none"><code>{{ $order->order_number }}</code></a></td>
+                                            <td>{{ $order->product?->name ?? 'Deleted product' }}</td>
+                                            <td class="fw-bold">{{ $order->quantity }}</td>
+                                            <td>₱{{ number_format($order->total, 2) }}</td>
+                                            <td>{{ $order->order_date->format('M d, Y') }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="5" class="text-center py-4 text-muted">No approved sales yet.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-bag-plus text-primary me-2"></i>Purchase Report</h5>
+                        <a href="{{ route('orders.index', ['type' => 'purchase']) }}" class="small text-decoration-none fw-semibold">View all</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light"><tr><th class="ps-3">Order #</th><th>Product</th><th>Qty</th><th>Value</th><th>Date</th></tr></thead>
+                                <tbody>
+                                    @forelse ($purchaseOrders as $order)
+                                        <tr>
+                                            <td class="ps-3"><a href="{{ route('orders.show', $order) }}" class="text-decoration-none"><code>{{ $order->order_number }}</code></a></td>
+                                            <td>{{ $order->product?->name ?? 'Deleted product' }}</td>
+                                            <td class="fw-bold">{{ $order->quantity }}</td>
+                                            <td>₱{{ number_format($order->total, 2) }}</td>
+                                            <td>{{ $order->order_date->format('M d, Y') }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="5" class="text-center py-4 text-muted">No approved purchases yet.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Report + Daily Report History -->
+        <div class="row mb-4">
+            <div class="col-lg-7 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white pt-3 border-bottom-0">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam text-warning me-2"></i>Product Report</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light"><tr><th class="ps-3">Product</th><th>Brand / Category</th><th>On Hand</th><th>Sales</th><th>Purchases</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    @forelse ($productReport as $item)
+                                        <tr>
+                                            <td class="ps-3"><strong>{{ $item->name }}</strong><div><code class="sku-tag">{{ $item->sku }}</code></div></td>
+                                            <td><small>{{ $item->brand?->name ?? '—' }} / {{ $item->category?->name ?? '—' }}</small></td>
+                                            <td class="fw-bold">{{ $item->quantity }}</td>
+                                            <td>{{ $item->sales_orders_count }}</td>
+                                            <td>{{ $item->purchase_orders_count }}</td>
+                                            <td><span class="badge badge-{{ $item->quantity == 0 ? 'out' : ($item->isLowStock() ? 'low' : 'in') }}">{{ $item->stock_status }}</span></td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="6" class="text-center py-4 text-muted">No products to report.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white pt-3 border-bottom-0">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-calendar2-week text-primary me-2"></i>Daily Report History</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light"><tr><th class="ps-3">Date</th><th>Type</th><th>Orders</th><th>Units</th></tr></thead>
+                                <tbody>
+                                    @forelse ($dailyHistory as $row)
+                                        <tr>
+                                            <td class="ps-3">{{ \Carbon\Carbon::parse($row->order_date)->format('M d, Y') }}</td>
+                                            <td><span class="badge {{ $row->type === 'purchase' ? 'badge-in' : 'badge-category' }}">{{ ucfirst($row->type) }}</span></td>
+                                            <td>{{ $row->orders }}</td>
+                                            <td class="fw-bold">{{ $row->units }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" class="text-center py-4 text-muted">No daily history yet.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product History -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history text-success me-2"></i>Product History (Stock Movements)</h5>
+                        <a href="{{ route('reports.tracking') }}" class="small text-decoration-none fw-semibold">Open tracking report →</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light"><tr><th class="ps-3">Product</th><th>Movement</th><th>Qty</th><th>Balance</th><th>User</th><th>Date</th></tr></thead>
+                                <tbody>
+                                    @forelse ($productHistory as $movement)
+                                        <tr>
+                                            <td class="ps-3">{{ $movement->product?->name ?? 'Deleted product' }}</td>
+                                            <td><span class="badge {{ $movement->badge_class }}">{{ $movement->type_label }}</span></td>
+                                            <td class="fw-bold {{ $movement->signedQuantity() < 0 ? 'text-danger' : 'text-success' }}">{{ $movement->quantity_display }}</td>
+                                            <td>{{ $movement->balance_after ?? '—' }}</td>
+                                            <td>{{ $movement->user?->name ?? 'System' }}</td>
+                                            <td>{{ $movement->created_at->format('M d, Y h:i A') }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="6" class="text-center py-4 text-muted">No stock movements recorded.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @else
+        <!-- Staff dashboard: product report + own orders + profile -->
+        <div class="row mb-4">
+            <div class="col-lg-7 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white pt-3 border-bottom-0">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam text-warning me-2"></i>Product Report</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light"><tr><th class="ps-3">Product</th><th>Brand / Category</th><th>On Hand</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    @forelse ($productReport as $item)
+                                        <tr>
+                                            <td class="ps-3"><strong>{{ $item->name }}</strong><div><code class="sku-tag">{{ $item->sku }}</code></div></td>
+                                            <td><small>{{ $item->brand?->name ?? '—' }} / {{ $item->category?->name ?? '—' }}</small></td>
+                                            <td class="fw-bold">{{ $item->quantity }}</td>
+                                            <td><span class="badge badge-{{ $item->quantity == 0 ? 'out' : ($item->isLowStock() ? 'low' : 'in') }}">{{ $item->stock_status }}</span></td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" class="text-center py-4 text-muted">No products to report.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-cart3 text-primary me-2"></i>My Orders</h5>
+                        <a href="{{ route('profile') }}" class="small text-decoration-none fw-semibold">My profile →</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light"><tr><th class="ps-3">Order #</th><th>Product</th><th>Qty</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    @forelse ($myOrders as $order)
+                                        <tr>
+                                            <td class="ps-3"><a href="{{ route('orders.show', $order) }}" class="text-decoration-none"><code>{{ $order->order_number }}</code></a></td>
+                                            <td>{{ $order->product?->name ?? 'Deleted product' }}</td>
+                                            <td>{{ $order->quantity }}</td>
+                                            <td><span class="badge {{ $order->badge_class }}">{{ $order->status_label }}</span></td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" class="text-center py-4 text-muted">You have not submitted any orders yet. <a href="{{ route('orders.create') }}">Create one →</a></td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('scripts')

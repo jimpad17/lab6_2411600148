@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\InventoryTransaction;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 
@@ -63,6 +64,44 @@ class DashboardController extends Controller
         $activeBrands = Brand::active()->count();
         $activeCategories = Category::active()->count();
 
+        /*
+         * Role-specific reporting. Admin gets sales/purchase, daily history
+         * and product history; staff gets the product report and their profile.
+         */
+        $isAdmin = auth()->user()->isAdmin();
+
+        $productReport = Product::active()
+            ->with(['brand', 'category'])
+            ->withCount([
+                'orders as sales_orders_count' => fn ($q) => $q->sales()->approved(),
+                'orders as purchase_orders_count' => fn ($q) => $q->purchases()->approved(),
+            ])
+            ->orderByDesc('sales_orders_count')
+            ->take(8)
+            ->get();
+
+        $salesOrders = collect();
+        $purchaseOrders = collect();
+        $dailyHistory = collect();
+        $productHistory = collect();
+        $pendingOrders = 0;
+        $myOrders = collect();
+
+        if ($isAdmin) {
+            $salesOrders = Order::approved()->sales()->with(['product', 'creator'])->latest()->take(6)->get();
+            $purchaseOrders = Order::approved()->purchases()->with(['product', 'creator'])->latest()->take(6)->get();
+            $dailyHistory = Order::approved()
+                ->selectRaw('order_date, type, SUM(quantity) as units, COUNT(*) as orders')
+                ->groupBy('order_date', 'type')
+                ->orderByDesc('order_date')
+                ->take(8)
+                ->get();
+            $productHistory = InventoryTransaction::with(['product', 'user'])->latest()->take(8)->get();
+            $pendingOrders = Order::pending()->count();
+        } else {
+            $myOrders = Order::forUser(auth()->id())->with('product')->latest()->take(5)->get();
+        }
+
         $hour = (int) now()->format('H');
         $greeting = match (true) {
             $hour >= 5 && $hour < 12 => 'Good Morning',
@@ -87,7 +126,15 @@ class DashboardController extends Controller
             'activeUsers',
             'activeBrands',
             'activeCategories',
-            'greeting'
+            'greeting',
+            'isAdmin',
+            'productReport',
+            'salesOrders',
+            'purchaseOrders',
+            'dailyHistory',
+            'productHistory',
+            'pendingOrders',
+            'myOrders'
         ));
     }
 }

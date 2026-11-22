@@ -32,7 +32,7 @@ incremental, guarded migrations.
 | **7. Real-time dashboard** | API endpoints `/api/dashboard/stats`, `/api/products/low-stock`, `/api/transactions/recent`, `/api/products/{product}/stock`, formatted with API Resources. `public/js/inventory-live.js` polls every 30 seconds, animates changed numbers, updates the "Last Updated" label, refreshes on tab focus, and handles failures gracefully. |
 | **8. Stock adjustments** | Admin-only physical-count form. The controller calculates `physical − system`, creates an adjustment transaction with the correct direction, logs the change, and lets the observer apply it. The form loads the current stock over AJAX. |
 | **9. History and reports** | Product detail now shows a date-filtered transaction table with a running balance. `/reports/tracking` produces a stock movement report, low-stock report and inventory valuation report, with CSV export. |
-| **10. Testing** | `php artisan test` — **43 tests pass**, including observer stock in/out, oversell rollback, validation, alert dedupe, adjustment direction, reversal/audit retention, role restrictions, API payloads and page rendering. Browser verification confirmed all Lab 6 pages load with no console errors and the three API calls return HTTP 200. |
+| **10. Testing** | `php artisan test` — **53 tests pass**, including observer stock in/out, oversell rollback, validation, alert dedupe, adjustment direction, reversal/audit retention, role restrictions, API payloads, page rendering, and the new order/stockout/SKU/role-report tests. Browser verification confirmed all Lab 6 pages load with no console errors and the three API calls return HTTP 200. |
 | **11. GitHub readiness** | `.gitignore` excludes `.env`, compiled dependencies and generated caches. Git initialization and the first commit are prepared locally (see `COMMIT_NOTES.md`); push requires the repository remote URL. |
 
 ### Key design decisions
@@ -41,6 +41,32 @@ incremental, guarded migrations.
 - **Option A for overselling: throw and roll back.** A stock-out that would make the balance negative throws `InsufficientStockException`. Because it is thrown inside `DB::transaction()`, both the transaction row and the product update are rolled back. Capping at zero would hide a real data error; allowing negatives would make valuation and reorder alerts meaningless.
 - **Reversal instead of deletion.** `destroy()` creates an equal-and-opposite transaction and flags the original `is_reversed = true`, so the audit trail is never destroyed.
 - **Incremental migrations.** Lab 5 rows and quantities are retained. Each new migration checks for existing columns/indexes before changing the schema.
+
+### Follow-up enhancements requested after the first demo
+
+- **Admin login.** The protected admin account now uses `jimpadillo@gmail.com` / `JimTrack2026!`.
+  The credentials are printed at the bottom of the login form. Migration
+  `2026_11_22_000007_update_admin_credentials.php` updates the existing Lab 5 user row in
+  place, so no account history is lost. The old `ADMIN` shortcut still resolves to the same
+  protected account.
+- **Role-specific dashboard.** Admin dashboard panels: Sales Report, Purchase Report,
+  Product Report, Daily Report History, Product History and a pending-order review banner.
+  Staff dashboard panels: Product Report, My Orders and a profile shortcut.
+- **Order approval workflow.** Staff submit purchase/sales orders with status `Pending`; no
+  stock changes yet. An admin edits the submitted quantity (the original is preserved in
+  `original_quantity`), then approves. Only approval creates an `InventoryTransaction`, so
+  the observer updates stock, alerts and the audit trail from the corrected figure. Staff
+  cannot edit or approve orders.
+- **Order date rule.** `ValidOrderDate` rejects past dates such as yesterday and accepts
+  today or any future date. The form also sets `min` to today.
+- **Product ID / SKU.** Now accepts alphanumeric values such as `JT-001` or `ABC123`
+  (letters, numbers, dots, hyphens, underscores) and validates them on the server.
+- **Automatic unavailability and stockout alert.** When an outbound movement takes a
+  product to exactly zero, the observer sets `is_active = false` so the product shows as
+  **Unavailable** in Products and Inventory (which also filter by brand, category and
+  status). Active admins receive a `StockOutNotification` in the bell dropdown and by email,
+  and an Inventory activity-log entry records the event. A later stock-in restores the
+  product automatically.
 
 ---
 
@@ -173,7 +199,7 @@ user accountability in inventory tracking very clear.
 
 ```bash
 php artisan migrate --no-interaction   # incremental, keeps Lab 5 data
-php artisan test                       # 43 tests pass
+php artisan test                       # 53 tests pass
 php artisan route:list --path=api      # 4 JSON endpoints
 php artisan serve                      # http://127.0.0.1:8000
 php artisan queue:work                 # deliver queued low-stock emails
