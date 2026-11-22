@@ -44,7 +44,7 @@ incremental, guarded migrations.
 
 ### Follow-up enhancements requested after the first demo
 
-- **Admin login.** The protected admin account now uses `jimpadillo@gmail.com` / `JimTrack2026!`.
+- **Admin login.** The protected admin account now uses `jimpadillo@gmail.com` / `admin123`.
   The credentials are printed at the bottom of the login form. Migration
   `2026_11_22_000007_update_admin_credentials.php` updates the existing Lab 5 user row in
   place, so no account history is lost. The old `ADMIN` shortcut still resolves to the same

@@ -62,14 +62,14 @@ and audit-ready history/reporting through **incremental migrations only**.
 
 | Username / Email | Password | Role | Status |
 |------------------|----------|------|--------|
-| `jimpadillo@gmail.com` | `JimTrack2026!` | Admin | Active |
+| `jimpadillo@gmail.com` | `admin123` | Admin | Active |
 | `juan@jimtrack.local` | `STAFF123` | Staff | Active |
 | `maria@jimtrack.local` | `STAFF123` | Staff | Active |
 | `test@jimtrack.local` | `STAFF123` | Staff | Inactive (login blocked) |
 
 The admin login is shown at the bottom of the login form. Typing `ADMIN` is still mapped to
 the protected admin account in `app/Http/Requests/Auth/LoginRequest.php`, but the password is
-now `JimTrack2026!` (migration `2026_11_22_000007_update_admin_credentials.php` updated the
+now `admin123` (migration `2026_11_22_000007_update_admin_credentials.php` updated the
 existing Lab 5 row in place — no data was deleted). The seeded admin cannot be deactivated
 or deleted.
 

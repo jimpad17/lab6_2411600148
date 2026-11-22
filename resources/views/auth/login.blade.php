@@ -32,7 +32,7 @@
         </div>
 
         <div class="text-center mt-3 small">
-            <div class="text-muted fw-bold">ADMIN: <span class="text-warning-dark">jimpadillo@gmail.com / JimTrack2026!</span></div>
+            <div class="text-muted fw-bold">ADMIN: <span class="text-warning-dark">jimpadillo@gmail.com / admin123</span></div>
             <div class="text-muted fw-bold mt-1">STAFF: <span class="text-warning-dark">juan@jimtrack.local / STAFF123</span></div>
         </div>
     </form>

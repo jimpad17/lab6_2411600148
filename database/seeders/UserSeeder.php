@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 class UserSeeder extends Seeder
 {
     /**
-     * Admin now signs in with jimpadillo@gmail.com / JimTrack2026!.
+     * Admin now signs in with jimpadillo@gmail.com / admin123.
      * The legacy "ADMIN" alias is still mapped to this account in LoginRequest.
      */
     public function run(): void
@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             [
                 'email' => 'jimpadillo@gmail.com',
                 'name' => 'Jim Padillo',
-                'password' => 'JimTrack2026!',
+                'password' => 'admin123',
                 'role' => 'admin',
                 'is_active' => true,
             ],

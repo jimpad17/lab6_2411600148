@@ -11,7 +11,7 @@ return new class extends Migration
 
     private const OLD_EMAIL = 'admin@jimtrack.local';
 
-    private const PASSWORD = 'JimTrack2026!';
+    private const PASSWORD = 'admin123';
 
     public function up(): void
     {

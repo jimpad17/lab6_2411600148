@@ -60,7 +60,7 @@ class OrderApprovalTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('jimpadillo@gmail.com')
-            ->assertSee('JimTrack2026!');
+            ->assertSee('admin123');
     }
 
     public function test_admin_can_authenticate_with_the_new_email(): void
@@ -69,7 +69,7 @@ class OrderApprovalTest extends TestCase
 
         $this->post(route('login'), [
             'email' => 'jimpadillo@gmail.com',
-            'password' => 'JimTrack2026!',
+            'password' => 'admin123',
         ])->assertRedirect(route('dashboard'));
 
         $this->assertAuthenticated();
