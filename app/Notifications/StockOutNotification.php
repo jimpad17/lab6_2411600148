@@ -3,8 +3,6 @@
 namespace App\Notifications;
 
 use App\Models\Product;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -12,10 +10,10 @@ use Illuminate\Notifications\Notification;
  * Sent when an outbound movement takes a product to exactly zero.
  * Delivered to the admin notification bell and by email; the observer also
  * writes an Activity Log entry so the event appears in the audit trail.
+ * Synchronous so the bell and audit entry appear immediately.
  */
-class StockOutNotification extends Notification implements ShouldQueue
+class StockOutNotification extends Notification
 {
-    use Queueable;
 
     public function __construct(public Product $product)
     {

@@ -3,20 +3,17 @@
 namespace App\Notifications;
 
 use App\Models\Product;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Queued low-stock alert. Delivery channels: database (bell dropdown) + email.
+ * Low-stock alert. Delivery channels: database (bell dropdown) + email.
  *
- * The observer dispatches it with Notification::send(); with QUEUE_CONNECTION=database
- * the mail job is handled in the background by `php artisan queue:work`.
+ * Synchronous so the bell updates immediately after a stock movement; the
+ * observer catches any mail failure so it can never roll back stock.
  */
-class LowStockNotification extends Notification implements ShouldQueue
+class LowStockNotification extends Notification
 {
-    use Queueable;
 
     public function __construct(public Product $product)
     {
