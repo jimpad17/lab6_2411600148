@@ -17,13 +17,30 @@ class OrderController extends Controller
     /** Staff see only their own orders; admins see the whole queue. */
     public function index(Request $request)
     {
+        return $this->ordersView($request, $request->input('type'));
+    }
+
+    /** Dedicated menu page for sales orders. */
+    public function sales(Request $request)
+    {
+        return $this->ordersView($request, Order::TYPE_SALES, 'Sales Order');
+    }
+
+    /** Dedicated menu page for purchase orders. */
+    public function purchase(Request $request)
+    {
+        return $this->ordersView($request, Order::TYPE_PURCHASE, 'Purchase Order');
+    }
+
+    private function ordersView(Request $request, ?string $type, ?string $heading = null)
+    {
         $query = Order::with(['product', 'creator']);
 
         if (! auth()->user()->isAdmin()) {
             $query->forUser(auth()->id());
         }
 
-        $query->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
+        $query->when($type, fn ($q) => $q->where('type', $type))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->betweenDates($request->input('from'), $request->input('to'))
             ->orderByDesc('order_date')
@@ -36,8 +53,14 @@ class OrderController extends Controller
             $base->forUser(auth()->id());
         }
 
+        $filters = $request->only(['type', 'status', 'from', 'to']);
+        if ($type) {
+            $filters['type'] = $type;
+        }
+
         return view('orders.index', [
             'orders' => $orders,
+            'pageHeading' => $heading,
             'pendingCount' => (clone $base)->pending()->count(),
             'approvedCount' => (clone $base)->approved()->count(),
             'salesTotal' => (float) (clone $base)->approved()->sales()->sum('quantity'),
@@ -48,7 +71,7 @@ class OrderController extends Controller
                 Order::STATUS_APPROVED => 'Approved',
                 Order::STATUS_REJECTED => 'Rejected',
             ],
-            'filters' => $request->only(['type', 'status', 'from', 'to']),
+            'filters' => $filters,
         ]);
     }
 
@@ -175,6 +198,7 @@ class OrderController extends Controller
 
                 $order->update([
                     'status' => Order::STATUS_APPROVED,
+                    'receipt_number' => Order::generateReceiptNumber(),
                     'approved_by' => auth()->id(),
                     'approved_at' => now(),
                 ]);

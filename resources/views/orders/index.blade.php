@@ -3,7 +3,11 @@
 @section('title', 'Orders')
 
 @section('heading')
-    Purchase &amp; Sales <span class="text-warning fw-bold">Orders</span>
+    @if (isset($pageHeading) && $pageHeading)
+        {{ $pageHeading }}
+    @else
+        Purchase &amp; Sales <span class="text-warning fw-bold">Orders</span>
+    @endif
 @endsection
 
 @section('actions')

@@ -32,7 +32,7 @@ incremental, guarded migrations.
 | **7. Real-time dashboard** | API endpoints `/api/dashboard/stats`, `/api/products/low-stock`, `/api/transactions/recent`, `/api/products/{product}/stock`, formatted with API Resources. `public/js/inventory-live.js` polls every 30 seconds, animates changed numbers, updates the "Last Updated" label, refreshes on tab focus, and handles failures gracefully. |
 | **8. Stock adjustments** | Admin-only physical-count form. The controller calculates `physical − system`, creates an adjustment transaction with the correct direction, logs the change, and lets the observer apply it. The form loads the current stock over AJAX. |
 | **9. History and reports** | Product detail now shows a date-filtered transaction table with a running balance. `/reports/tracking` produces a stock movement report, low-stock report and inventory valuation report, with CSV export. |
-| **10. Testing** | `php artisan test` — **53 tests pass**, including observer stock in/out, oversell rollback, validation, alert dedupe, adjustment direction, reversal/audit retention, role restrictions, API payloads, page rendering, and the new order/stockout/SKU/role-report tests. Browser verification confirmed all Lab 6 pages load with no console errors and the three API calls return HTTP 200. |
+| **10. Testing** | `php artisan test` — **64 tests pass**, including observer stock in/out, oversell rollback, validation, alert dedupe, adjustment direction, reversal/audit retention, role restrictions, API payloads, page rendering, order/stockout/SKU/role-report tests, the exact sidebar groups, receipt generation and profile editing. Browser verification confirmed all Lab 6 pages load with no console errors and the three API calls return HTTP 200. |
 | **11. GitHub readiness** | `.gitignore` excludes `.env`, compiled dependencies and generated caches. Git initialization and the first commit are prepared locally (see `COMMIT_NOTES.md`); push requires the repository remote URL. |
 
 ### Key design decisions
@@ -67,6 +67,22 @@ incremental, guarded migrations.
   status). Active admins receive a `StockOutNotification` in the bell dropdown and by email,
   and an Inventory activity-log entry records the event. A later stock-in restores the
   product automatically.
+- **Exact sidebar menu.** The navigation now uses the requested groups — MAIN (Dashboard),
+  INVENTORY (Inventory, Products, Brands, Categories), MANAGEMENT (Users, Product Report),
+  ORDERS (Sales Order, Purchase Order), RECORDS (Receipt, Transaction History) and MONITORING
+  (Product History, Daily Report History, Audit Trail). Staff see the subset shown in the
+  portal screenshot: Products/Brands/Categories, Product Report, both order pages,
+  Transaction History, Product History and Audit Trail. My Profile is available from the
+  user dropdown.
+- **Receipts.** Approving an order assigns a unique `RCP-YYYY-####` number. The Receipt page
+  lists them and each receipt is printable with product, quantity, price, total and signature
+  lines. Staff can print only their own receipts.
+- **Profile editing.** Users can update their name, email and profile picture (JPG/PNG/GIF/WEBP,
+  max 2 MB) and change their password after entering the current one. The protected admin
+  email is read-only and enforced server-side.
+- **dbGate access.** `DBGATE.md` documents the live MySQL connection
+  (`127.0.0.1:3306`, `jimtrack_inventory`, `root`, blank password), verification queries and
+  optional SQL backup/import steps.
 
 ---
 
@@ -199,7 +215,7 @@ user accountability in inventory tracking very clear.
 
 ```bash
 php artisan migrate --no-interaction   # incremental, keeps Lab 5 data
-php artisan test                       # 53 tests pass
+php artisan test                       # 64 tests pass
 php artisan route:list --path=api      # 4 JSON endpoints
 php artisan serve                      # http://127.0.0.1:8000
 php artisan queue:work                 # deliver queued low-stock emails

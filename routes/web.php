@@ -6,8 +6,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventoryTransactionController;
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -48,11 +50,23 @@ Route::middleware(['auth', EnsureUserIsActive::class, LogActivity::class])->grou
 
     /* Purchase / sales orders: staff submit, admins review and approve. */
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('sales-orders', [OrderController::class, 'sales'])->name('sales-orders');
+    Route::get('purchase-orders', [OrderController::class, 'purchase'])->name('purchase-orders');
     Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->whereNumber('order');
 
+    /* Records / monitoring menu pages. */
+    Route::get('receipts', [ReceiptController::class, 'index'])->name('receipts.index');
+    Route::get('receipts/{order}', [ReceiptController::class, 'show'])->name('receipts.show')->whereNumber('order');
+    Route::get('transaction-history', [InventoryTransactionController::class, 'index'])->name('transaction-history');
+    Route::get('product-history', [MenuController::class, 'productHistory'])->name('product-history');
+    Route::get('audit-trail', [ActivityLogController::class, 'index'])->name('audit-trail');
+    Route::get('product-report', [MenuController::class, 'productReport'])->name('product-report');
+
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('profile/password', [ProfileController::class, 'changePassword'])->name('profile.password');
 
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
     Route::get('products/export/csv', [ProductController::class, 'exportCsv'])->name('products.export');
@@ -99,7 +113,11 @@ Route::middleware(['auth', EnsureUserIsActive::class, LogActivity::class])->grou
         Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
-        // Audit trail
+        // Daily report pages (admin management/monitoring menu)
+        Route::get('daily-report', [MenuController::class, 'dailyReport'])->name('daily-report');
+        Route::get('daily-report-history', [MenuController::class, 'dailyReportHistory'])->name('daily-report-history');
+
+        // Audit trail (legacy URL kept for bookmarks)
         Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
         // Reversing a transaction keeps the original audit record intact.

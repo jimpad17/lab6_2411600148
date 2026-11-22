@@ -52,8 +52,9 @@ and audit-ready history/reporting through **incremental migrations only**.
 
 > The Lab 6 migrations are `000001_extend_inventory_transactions_for_tracking`,
 > `000002_create_notifications_table`, `000003_add_low_stock_notified_at_to_products_table`,
-> `000005_add_stockout_notified_at_to_products_table`, `000006_create_orders_table`, and
-> `000007_update_admin_credentials` (all under `database/migrations/`). Each uses
+> `000005_add_stockout_notified_at_to_products_table`, `000006_create_orders_table`,
+> `000007_update_admin_credentials`, `000008_add_avatar_to_users_table` and
+> `000009_add_receipt_number_to_orders_table` (all under `database/migrations/`). Each uses
 > `hasColumn()` / `hasTable()` guards and only adds data, so Lab 5 records are preserved.
 
 ---
@@ -83,10 +84,13 @@ or deleted.
 | Dashboard: sales/purchase report, daily history, product history | ✅ | ❌ |
 | Dashboard: product report + own orders / profile | ❌ | ✅ |
 | Inventory overview + Stock In / Stock Out (products, brands, categories) | ✅ | ✅ |
+| Menu: Product Report / Sales Order / Purchase Order / Transaction History / Product History / Audit Trail | ✅ | ✅ |
+| Menu: Daily Report + Daily Report History | ✅ | ❌ |
+| Receipt list + printable receipt (auto-generated on approval) | ✅ | Own receipts only |
 | Transaction log, create, details | ✅ | ✅ |
 | Orders: submit purchase/sales orders | ✅ | ✅ |
 | Orders: correct quantity, approve/reject (stock only moves on approval) | ✅ | ❌ |
-| Profile page | ✅ | ✅ |
+| Profile: view / edit name, email, avatar / change password | ✅ | ✅ |
 | Products / Brands / Categories — view, search, CSV export | ✅ | ✅ |
 | Add / edit / deactivate / restore master data | ✅ | ❌ |
 | Physical-count stock adjustments | ✅ | ❌ |
@@ -94,7 +98,7 @@ or deleted.
 | Users management | ✅ | ❌ |
 | Reports (valuation, tracking, CSV) | ✅ | ❌ |
 | Notifications inbox + mark as read | ✅ | ✅ |
-| Activity Log | ✅ | ❌ |
+| Audit trail / Activity Log | ✅ | ✅ (read-only via `/audit-trail`) |
 
 Admin-only routes are protected by the `admin` middleware in `routes/web.php` (403 on
 direct access) and their links are hidden in the Blade views.
@@ -121,6 +125,11 @@ direct access) and their links are hidden in the Blade views.
 | **Role-specific dashboard reports** — admin sees sales/purchase, product, daily-history and product-history panels; staff sees product report and own orders | `DashboardController@index`, `resources/views/dashboard.blade.php` |
 | **Alphanumeric Product ID / SKU** — letters and numbers (plus `.`, `-`, `_`) are accepted and validated | `ProductController@rules`, `resources/views/products/_form.blade.php` |
 | **New tests for the above** — 10 extra feature tests | `tests/Feature/OrderApprovalTest.php` |
+| **Exact sidebar menu** — admin: MAIN / INVENTORY / MANAGEMENT / ORDERS / RECORDS / MONITORING; staff: the subset without Inventory, Users and Daily Report History | `resources/views/layouts/app.blade.php` |
+| **Receipts** — approval assigns `RCP-YYYY-####`; list + printable receipt with signature lines; staff see only their own | `app/Http/Controllers/ReceiptController.php`, `resources/views/receipts/*`, migration `000009` |
+| **Profile editing** — change name/email/avatar (2 MB limit) and password with current-password check; protected admin email cannot be changed | `ProfileController@update`, `ProfileController@changePassword`, `resources/views/profile/index.blade.php`, migration `000008` |
+| **Menu report pages** — dedicated Product Report, Daily Report, Daily Report History and Product History pages | `app/Http/Controllers/MenuController.php`, `resources/views/menu/*` |
+| **New menu/profile tests** — 11 extra feature tests | `tests/Feature/AppMenuTest.php` |
 
 ### Backward compatibility with Lab 5
 
@@ -152,7 +161,11 @@ Responses use `InventoryStatResource`, `ProductStockResource` and
 - `/inventory` — stock levels and quick Stock In / Stock Out (filter by brand, category and status including Unavailable)
 - `/inventory-transactions` — filterable transaction log (create/show/reverse)
 - `/orders` — purchase/sales order queue; `/orders/create` — submit an order; admin can edit/approve/reject
-- `/profile` — account details and recent orders
+- `/sales-orders`, `/purchase-orders` — dedicated order lists by type
+- `/receipts` — printable receipts generated from approved orders
+- `/product-report`, `/product-history`, `/transaction-history`, `/audit-trail` — menu pages
+- `/daily-report`, `/daily-report-history` — admin-only daily reports
+- `/profile` — account details, edit profile/avatar, change password, recent orders
 - `/adjustments/create` — admin physical-count adjustment
 - `/notifications` — low-stock alert inbox
 - `/products` — product management with per-product transaction history
@@ -176,10 +189,20 @@ the audit trail is always kept.
 php artisan test
 ```
 
-**53 tests pass**, covering Breeze auth, Lab 5 stock/CRUD/roles/activity logging, the Lab 6
+**64 tests pass**, covering Breeze auth, Lab 5 stock/CRUD/roles/activity logging, the Lab 6
 observer, rollback, oversell rejection, notifications, API, adjustments, reversal, access
-control and page rendering, plus the new admin credentials, order approval workflow, date
-rule, stockout alert, alphanumeric SKU and role-specific dashboard reports.
+control and page rendering, plus the admin credentials, order approval workflow, date rule,
+stockout alert, alphanumeric SKU, role-specific dashboard reports, exact sidebar menu,
+receipt generation and profile editing.
+
+---
+
+## dbGate (browse the MySQL database)
+
+See `DBGATE.md` for the exact connection settings (`127.0.0.1:3306`, database
+`jimtrack_inventory`, user `root`, blank password), table overview, verification queries
+and optional SQL backup/import steps. dbGate connects to the live XAMPP MySQL instance, so
+no data migration is needed.
 
 ---
 

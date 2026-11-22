@@ -29,6 +29,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'avatar',
     ];
 
     /**
@@ -85,5 +86,21 @@ class User extends Authenticatable
     public function activities()
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    /** URL used by the profile picture; null means show the initials fallback. */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? \Illuminate\Support\Facades\Storage::url($this->avatar) : null;
+    }
+
+    public function getInitialsAttribute(): string
+    {
+        $parts = preg_split('/\s+/', trim((string) $this->name)) ?: [];
+
+        return strtoupper(implode('', array_map(
+            fn (string $part) => $part[0] ?? '',
+            array_slice($parts, 0, 2)
+        )));
     }
 }

@@ -20,6 +20,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'receipt_number',
         'type',
         'product_id',
         'quantity',
@@ -139,6 +140,19 @@ class Order extends Model
         do {
             $number = sprintf('%s-%s-%04d', $prefix, $year, $next++);
         } while (static::where('order_number', $number)->exists());
+
+        return $number;
+    }
+
+    /** Printable receipt number created when an admin approves the order. */
+    public static function generateReceiptNumber(): string
+    {
+        $year = date('Y');
+        $next = (int) static::whereNotNull('receipt_number')->count() + 1;
+
+        do {
+            $number = sprintf('RCP-%s-%04d', $year, $next++);
+        } while (static::where('receipt_number', $number)->exists());
 
         return $number;
     }

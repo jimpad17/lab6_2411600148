@@ -93,6 +93,11 @@
                             <li><span class="dropdown-item-text small text-muted">{{ Auth::user()->email }}</span></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
+                                <a class="dropdown-item small fw-semibold" href="{{ route('profile') }}">
+                                    <i class="bi bi-person-circle me-1"></i> My Profile
+                                </a>
+                            </li>
+                            <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="dropdown-item small fw-semibold">
@@ -112,64 +117,53 @@
             <!-- Sidebar Navigation -->
             <nav class="col-md-3 col-lg-2 d-md-block sidebar vh-100 p-3">
                 <div class="position-sticky pt-2 d-flex flex-column" style="min-height: calc(100vh - 90px);">
-                    <small class="text-uppercase text-muted fw-bold px-3 mb-2" style="font-size: .68rem;">Main Menu</small>
-                    <ul class="nav flex-column gap-1">
-                        @php
-                            $navItems = [
+                    @php
+                        $isAdmin = Auth::user()->isAdmin();
+                        $navGroups = [
+                            ['label' => 'Main', 'items' => [
                                 ['dashboard', 'Dashboard', 'bi-speedometer2', 'dashboard'],
-                                ['inventory.index', 'Inventory', 'bi-clipboard-data', 'inventory*'],
-                                ['transactions.index', 'Transactions', 'bi-arrow-left-right', 'transactions*'],
-                                ['orders.index', 'Orders', 'bi-cart3', 'orders*'],
+                            ]],
+                            ['label' => 'Inventory', 'items' => array_filter([
+                                $isAdmin ? ['inventory.index', 'Inventory', 'bi-clipboard-data', 'inventory*'] : null,
                                 ['products.index', 'Products', 'bi-box-seam', 'products*'],
                                 ['brands.index', 'Brands', 'bi-award', 'brands*'],
                                 ['categories.index', 'Categories', 'bi-tags', 'categories*'],
-                            ];
-                        @endphp
-                        @foreach ($navItems as [$route, $label, $icon, $pattern])
-                            <li class="nav-item">
-                                <a class="nav-link rounded px-3 py-2 {{ request()->routeIs($pattern) ? 'active' : '' }}"
-                                   href="{{ route($route) }}">
-                                    <i class="bi {{ $icon }} me-2"></i> {{ $label }}
-                                </a>
-                            </li>
-                        @endforeach
+                            ])],
+                            ['label' => 'Management', 'items' => array_filter([
+                                $isAdmin ? ['users.index', 'Users', 'bi-people', 'users*'] : null,
+                                ['product-report', 'Product Report', 'bi-file-bar-graph', 'product-report*'],
+                            ])],
+                            ['label' => 'Orders', 'items' => [
+                                ['sales-orders', 'Sales Order', 'bi-cart-check', 'sales-orders*'],
+                                ['purchase-orders', 'Purchase Order', 'bi-cart-plus', 'purchase-orders*'],
+                            ]],
+                            ['label' => 'Records', 'items' => array_filter([
+                                $isAdmin ? ['receipts.index', 'Receipt', 'bi-receipt', 'receipts*'] : null,
+                                ['transaction-history', 'Transaction History', 'bi-arrow-left-right', 'transaction-history*'],
+                            ])],
+                            ['label' => 'Monitoring', 'items' => array_filter([
+                                ['product-history', 'Product History', 'bi-clock-history', 'product-history*'],
+                                $isAdmin ? ['daily-report-history', 'Daily Report History', 'bi-calendar2-week', 'daily-report-history*'] : null,
+                                ['audit-trail', 'Audit Trail', 'bi-shield-check', 'audit-trail*'],
+                            ])],
+                        ];
+                    @endphp
 
-                        @if (Auth::user()->isAdmin())
-                            <li class="nav-item">
-                                <a class="nav-link rounded px-3 py-2 {{ request()->routeIs('users*') ? 'active' : '' }}"
-                                   href="{{ route('users.index') }}">
-                                    <i class="bi bi-people me-2"></i> Users
-                                </a>
-                            </li>
-                        @endif
+                    @foreach ($navGroups as $group)
+                        <small class="text-uppercase text-muted fw-bold px-3 mt-3 mb-2" style="font-size: .68rem;">{{ $group['label'] }}</small>
+                        <ul class="nav flex-column gap-1">
+                            @foreach ($group['items'] as [$route, $label, $icon, $pattern])
+                                <li class="nav-item">
+                                    <a class="nav-link rounded px-3 py-2 {{ request()->routeIs($pattern) ? 'active' : '' }}"
+                                       href="{{ route($route) }}">
+                                        <i class="bi {{ $icon }} me-2"></i> {{ $label }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endforeach
 
-                        @if (Auth::user()->isAdmin())
-                            <li class="nav-item">
-                                <a class="nav-link rounded px-3 py-2 {{ request()->routeIs('adjustments*') ? 'active' : '' }}"
-                                   href="{{ route('adjustments.create') }}">
-                                    <i class="bi bi-sliders2 me-2"></i> Adjustments
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (Auth::user()->isAdmin())
-                            <li class="nav-item">
-                                <a class="nav-link rounded px-3 py-2 {{ request()->routeIs('activity-logs*') ? 'active' : '' }}"
-                                   href="{{ route('activity-logs.index') }}">
-                                    <i class="bi bi-clock-history me-2"></i> Activity Log
-                                </a>
-                            </li>
-                        @endif
-
-                        <li class="nav-item">
-                            <a class="nav-link rounded px-3 py-2 {{ request()->routeIs('profile') ? 'active' : '' }}"
-                               href="{{ route('profile') }}">
-                                <i class="bi bi-person-circle me-2"></i> Profile
-                            </a>
-                        </li>
-                    </ul>
-
-                    @unless (Auth::user()->isAdmin())
+                    @unless ($isAdmin)
                         <small class="text-muted px-3 mt-3 d-block" style="font-size: .65rem;">
                             <i class="bi bi-info-circle me-1"></i> Staff view — inventory operations
                         </small>

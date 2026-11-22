@@ -4,15 +4,18 @@ A local repository has been initialized in this folder and the Lab 6 work is com
 
 ```bash
 git status
-git log --oneline -3
-# <new commit>  follow-up: admin login, order approval, stockout alerts and role reports
+git log --oneline -4
+# <new commit>  feat: exact app menu, receipts, profile editing and dbGate guide
+# 4a5fe02      chore: change admin password to admin123
+# aeae30b      feat: admin login, order approval, stockout alerts and role-specific reports
 # 509ad71      docs: add GitHub push and PDF submission notes
-# ed59ce0      Lab 6: real-time inventory tracking with observer, notifications, API and reports
 ```
 
-The follow-up commit includes the new admin credentials, the pending → admin edit → approve
-order workflow, the today/future order-date rule, alphanumeric Product ID/SKU support,
-automatic unavailability + bell/audit stockout alerts, and role-specific dashboard reports.
+The commits include the new admin credentials, the pending → admin edit → approve order
+workflow, the today/future order-date rule, alphanumeric Product ID/SKU support, automatic
+unavailability + bell/audit stockout alerts, role-specific dashboard reports, the exact
+sidebar menu from the app design, auto-generated printable receipts, profile editing with
+password change, and `DBGATE.md`.
 
 ## Safety check
 
