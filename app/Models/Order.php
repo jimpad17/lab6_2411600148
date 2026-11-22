@@ -120,9 +120,15 @@ class Order extends Model
         };
     }
 
+    /** Current unit price of the ordered product, used on the printable receipt. */
+    public function getUnitPriceAttribute(): float
+    {
+        return round((float) ($this->product?->unit_price ?? 0), 2);
+    }
+
     public function getTotalAttribute(): float
     {
-        return round((float) ($this->product?->unit_price ?? 0) * (int) $this->quantity, 2);
+        return round($this->unit_price * (int) $this->quantity, 2);
     }
 
     public function getWasEditedAttribute(): bool

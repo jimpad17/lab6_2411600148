@@ -7,9 +7,11 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Notifications\OrderApprovedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -144,8 +146,12 @@ class AppMenuTest extends TestCase
         $this->actingAs($admin)->get(route('receipts.index'))
             ->assertOk()->assertSee($order->receipt_number);
 
+        $this->assertSame(250.0, $order->unit_price);
+        $this->assertSame(1000.0, $order->total);
+
         $this->actingAs($admin)->get(route('receipts.show', $order))
-            ->assertOk()->assertSee('RECEIPT')->assertSee($order->receipt_number);
+            ->assertOk()->assertSee('RECEIPT')->assertSee($order->receipt_number)
+            ->assertSee('250.00')->assertSee('1,000.00');
     }
 
     public function test_staff_can_only_open_their_own_receipts(): void
@@ -167,6 +173,63 @@ class AppMenuTest extends TestCase
 
         $this->actingAs($other)->get(route('receipts.show', $order))->assertForbidden();
         $this->actingAs($owner)->get(route('receipts.show', $order))->assertOk();
+    }
+
+    public function test_approval_notifies_staff_and_admin_with_a_receipt_link(): void
+    {
+        Notification::fake();
+        $admin = $this->admin();
+        $staff = $this->staff();
+        $product = $this->product();
+
+        $this->actingAs($staff)->post(route('orders.store'), [
+            'type' => Order::TYPE_PURCHASE,
+            'product_id' => $product->id,
+            'quantity' => 3,
+            'order_date' => today()->toDateString(),
+        ])->assertRedirect();
+
+        $order = Order::firstOrFail();
+
+        $this->actingAs($admin)->post(route('orders.approve', $order))->assertRedirect();
+        $order->refresh();
+        $this->assertNotNull($order->receipt_number);
+
+        Notification::assertSentTo($staff, OrderApprovedNotification::class,
+            function (OrderApprovedNotification $notification) use ($order, $staff) {
+                $data = $notification->toArray($staff);
+
+                return $data['receipt_number'] === $order->receipt_number
+                    && $data['url'] === route('receipts.show', $order);
+            });
+        Notification::assertSentTo($admin, OrderApprovedNotification::class);
+    }
+
+    public function test_receipt_notification_appears_in_the_bell_and_inbox(): void
+    {
+        $admin = $this->admin();
+        $staff = $this->staff();
+        $product = $this->product();
+
+        $this->actingAs($staff)->post(route('orders.store'), [
+            'type' => Order::TYPE_SALES,
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'order_date' => today()->toDateString(),
+        ])->assertRedirect();
+
+        $order = Order::firstOrFail();
+        $this->actingAs($admin)->post(route('orders.approve', $order))->assertRedirect();
+        $order->refresh();
+
+        $this->actingAs($staff)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Order Approved — Receipt Ready');
+
+        $this->actingAs($staff)->get(route('notifications.index'))
+            ->assertOk()
+            ->assertSee($order->receipt_number)
+            ->assertSee('View / Print Receipt');
     }
 
     public function test_user_can_edit_their_profile_and_upload_an_avatar(): void

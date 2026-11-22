@@ -30,6 +30,7 @@
                     $alertTypes = [
                         \App\Notifications\LowStockNotification::class,
                         \App\Notifications\StockOutNotification::class,
+                        \App\Notifications\OrderApprovedNotification::class,
                     ];
                     $unreadAlertsCount = Auth::user()->unreadNotifications()
                         ->whereIn('type', $alertTypes)->count();
@@ -51,14 +52,14 @@
                             <li>
                                 <h6 class="dropdown-header fw-bold">
                                     <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
-                                    Inventory Alerts
+                                    Notifications
                                     <span class="badge badge-low ms-1">{{ $unreadAlertsCount }}</span>
                                 </h6>
                             </li>
                             @forelse ($unreadAlerts as $alert)
                                 <li>
                                     <a class="dropdown-item small py-2" href="{{ $alert->data['url'] ?? route('notifications.index') }}">
-                                        <div class="fw-bold text-dark">{{ $alert->data['product_name'] ?? 'Stock alert' }}</div>
+                                        <div class="fw-bold text-dark">{{ $alert->data['title'] ?? $alert->data['product_name'] ?? 'Notification' }}</div>
                                         <div class="text-muted">{{ \Illuminate\Support\Str::limit($alert->data['message'] ?? '', 70) }}</div>
                                         <div class="text-muted" style="font-size: .68rem;">{{ $alert->created_at->diffForHumans() }}</div>
                                     </a>

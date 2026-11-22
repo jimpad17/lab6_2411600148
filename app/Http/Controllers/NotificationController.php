@@ -8,7 +8,7 @@ use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
 {
-    /** All low-stock alerts delivered to the signed-in user. */
+    /** All alerts (stock + approved orders) delivered to the signed-in user. */
     public function index()
     {
         return view('notifications.index', [
@@ -32,7 +32,7 @@ class NotificationController extends Controller
     {
         auth()->user()->unreadNotifications->markAsRead();
 
-        ActivityLogger::log('updated', 'Notifications', 'Marked all low-stock alerts as read.');
+        ActivityLogger::log('updated', 'Notifications', 'Marked all notifications as read.');
 
         return back()->with('success', 'All alerts were marked as read.');
     }

@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Low Stock Alerts')
+@section('title', 'Notifications')
 
 @section('heading')
-    Low Stock <span class="text-warning fw-bold">Alerts</span>
+    <span class="text-warning fw-bold">Notifications</span>
 @endsection
 
 @section('actions')
@@ -38,7 +38,11 @@
                         </div>
                         <div class="small text-muted">{{ $data['message'] ?? '' }}</div>
                         <div class="small mt-1">
-                            <span class="badge badge-category">{{ $data['sku'] ?? '' }}</span>
+                            @if (! empty($data['receipt_number']))
+                                <span class="badge badge-category">{{ $data['receipt_number'] }}</span>
+                            @else
+                                <span class="badge badge-category">{{ $data['sku'] ?? '' }}</span>
+                            @endif
                             <span class="text-muted ms-2">{{ $notification->created_at->format('M d, Y h:i A') }}</span>
                         </div>
                         @if (! empty($data['suggested_action']))
@@ -47,8 +51,9 @@
                     </div>
                     <div class="text-nowrap">
                         @if (! empty($data['url']))
-                            <a href="{{ $data['url'] }}" class="btn btn-sm btn-outline-primary" title="Open product">
-                                <i class="bi bi-eye"></i>
+                            <a href="{{ $data['url'] }}" class="btn btn-sm btn-outline-primary"
+                               title="{{ ! empty($data['receipt_number']) ? 'View / Print Receipt' : 'Open product' }}">
+                                <i class="bi {{ ! empty($data['receipt_number']) ? 'bi-printer' : 'bi-eye' }}"></i>
                             </a>
                         @endif
                         @unless ($notification->read_at)
@@ -65,7 +70,7 @@
             @empty
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-bell-slash" style="font-size: 2rem;"></i>
-                    <p class="mt-2 mb-0">No alerts yet. You will be notified when stock reaches its reorder level.</p>
+                    <p class="mt-2 mb-0">No notifications yet. You will be notified about stock alerts and approved orders.</p>
                 </div>
             @endforelse
         </div>

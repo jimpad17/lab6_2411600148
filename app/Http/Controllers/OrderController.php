@@ -6,10 +6,13 @@ use App\Exceptions\InsufficientStockException;
 use App\Models\InventoryTransaction;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
+use App\Notifications\OrderApprovedNotification;
 use App\Rules\ValidOrderDate;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
@@ -210,8 +213,30 @@ class OrderController extends Controller
         ActivityLogger::log('updated', 'Orders',
             "Approved {$order->type_label} {$order->order_number}; stock was updated and the audit trail recorded.");
 
+        // Bell + email notification with a direct link to the printable receipt.
+        $approved = $order->fresh()->load('product');
+        $recipients = User::query()
+            ->where(function ($query) use ($approved) {
+                $query->whereKey($approved->user_id)
+                    ->orWhere('role', 'admin');
+            })
+            ->where('is_active', true)
+            ->get()
+            ->unique('id')
+            ->values();
+
+        if ($recipients->isNotEmpty()) {
+            try {
+                Notification::send($recipients, new OrderApprovedNotification($approved));
+            } catch (\Throwable $exception) {
+                // The stock movement and receipt are already committed — never fail the
+                // approval because a mail transport is unavailable.
+                report($exception);
+            }
+        }
+
         return redirect()->route('orders.show', $order)
-            ->with('success', 'Order approved. Stock, alerts and the audit trail were updated.');
+            ->with('success', 'Order approved. Stock, receipt and notifications were updated.');
     }
 
     public function reject(Order $order)
